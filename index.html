@@ -693,3 +693,62 @@ document.getElementById("btnCheck").addEventListener("click", async () => {
   const st = loadState();
 
   // restore units
+  if (!st.units) saveState({ units: DEFAULT_UNITS });
+
+  // restore fields
+  if (st.quickNotes) document.getElementById("quickNotes").value = st.quickNotes;
+  if (st.apiKey) document.getElementById("apiKey").value = st.apiKey;
+  if (st.proxyUrl) document.getElementById("proxyUrl").value = st.proxyUrl;
+  if (st.taskType) document.getElementById("taskType").value = st.taskType;
+  if (st.writingPrompt) document.getElementById("writingPrompt").value = st.writingPrompt;
+  if (st.writingDraft) document.getElementById("writingDraft").value = st.writingDraft;
+
+  // mode
+  setMode(st.apiMode || "client");
+
+  // active unit box
+  const units = unitsFromState();
+  const active = units.find(u => u.id === st.activeUnitId) || null;
+  if (active) setActiveUnit(active);
+
+  buildUnitList();
+  updateProgressUI();
+})();
+</script>
+
+<!-- =========================
+   OPTIONAL: Proxy sample (recommended)
+   Put this on your server (Vercel/Node/Cloudflare) NOT in this HTML.
+
+   Why: to keep OPENAI_API_KEY secret. :contentReference[oaicite:6]{index=6}
+   Endpoint: POST /api/openai
+   Body from browser: { model, input }
+   Server forwards to https://api.openai.com/v1/responses :contentReference[oaicite:7]{index=7}
+=========================
+
+Example (Node / Express):
+
+import express from "express";
+import fetch from "node-fetch";
+const app = express();
+app.use(express.json());
+
+app.post("/api/openai", async (req,res) => {
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+  const r = await fetch("https://api.openai.com/v1/responses", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer " + OPENAI_API_KEY
+    },
+    body: JSON.stringify(req.body)
+  });
+  const data = await r.json();
+  res.status(r.status).json(data);
+});
+
+app.listen(3000);
+
+-->
+</body>
+</html>
