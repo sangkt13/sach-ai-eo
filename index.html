@@ -1,1315 +1,695 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ColloMaster AI - Advanced Collocations</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>IELTS Vocabulary Book Study + Writing Corrector (PDF + ChatGPT)</title>
 
+  <!-- UI (no build tools) -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.min.js"></script>
 
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-    .perspective-1000 { perspective: 1000px; }
-    .transform-style-3d { transform-style: preserve-3d; }
-    .backface-hidden { backface-visibility: hidden; }
-    .rotate-y-180 { transform: rotateY(180deg); }
-    .card-flip-inner { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-    .card-flipped .card-flip-inner { transform: rotateY(180deg); }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
-    .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-
-    .glass-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-
-    .modal { opacity: 0; visibility: hidden; transition: all 0.3s ease-in-out; z-index: 50; }
-    .modal.active { opacity: 1; visibility: visible; }
-    .modal-content { transform: scale(0.95); transition: all 0.3s ease-in-out; }
-
-    .nav-item {
-      display: flex; align-items: center; padding: 10px 12px; font-size: 13px;
-      color: #475569; border-radius: 8px; transition: all 0.2s;
-      margin-bottom: 2px; cursor: pointer;
-    }
-    .nav-item:hover { background-color: #f1f5f9; color: #4f46e5; }
-    .nav-item.active { background-color: #e0e7ff; color: #4338ca; font-weight: 600; }
-
-    .dash-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    .dash-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-      border-color: #818cf8;
-    }
-
-    /* Simple line clamp */
-    .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    /* PDF canvas crisp */
+    canvas { image-rendering: -webkit-optimize-contrast; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
   </style>
 </head>
 
-<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
+<body class="bg-slate-50 text-slate-900">
+  <div class="min-h-screen flex flex-col">
 
-  <!-- Navbar -->
-  <nav class="glass-nav border-b border-slate-200 h-16 flex-none z-30">
-    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 h-full">
-      <div class="flex justify-between h-full">
-        <!-- Logo -->
-        <div class="flex items-center">
-          <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer" onclick="loadDashboard()">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
-              C
-            </div>
-            <div class="flex flex-col">
-              <span class="font-bold text-lg text-slate-800 leading-none">ColloMaster <span class="text-indigo-600">AI</span></span>
-              <span class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Advanced English</span>
-            </div>
+    <!-- Top bar -->
+    <header class="sticky top-0 z-20 bg-white/90 backdrop-blur border-b">
+      <div class="max-w-[1400px] mx-auto px-4 py-3 flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-slate-900 text-white grid place-items-center font-bold">I</div>
+          <div>
+            <div class="font-semibold leading-tight">IELTS Book Study + Writing Corrector</div>
+            <div class="text-xs text-slate-500 leading-tight">Mở PDF sách, học theo Unit, lưu tiến độ, chấm/sửa Writing bằng ChatGPT</div>
           </div>
         </div>
 
-        <!-- Right Actions -->
-        <div class="flex items-center gap-4">
-          <button onclick="openApiModal()" id="apiKeyBtn"
-            class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 transition-colors border border-slate-200">
-            <div id="apiStatusDot" class="w-2 h-2 rounded-full bg-red-500 shadow-sm"></div>
-            <span id="apiStatusText">AI Disconnected</span>
-            <i class="fas fa-cog"></i>
+        <div class="ml-auto flex items-center gap-2">
+          <label class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 cursor-pointer text-sm">
+            <input id="pdfFile" type="file" accept="application/pdf" class="hidden" />
+            📄 Chọn PDF
+          </label>
+
+          <button id="btnSave" class="px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-sm">
+            💾 Lưu
           </button>
 
-          <div class="h-9 w-9 rounded-full bg-gradient-to-r from-pink-500 to-orange-500 p-[2px] cursor-pointer shadow-sm">
-            <div class="h-full w-full rounded-full bg-white flex items-center justify-center text-xs font-bold text-slate-700">
-              ME
-            </div>
-          </div>
+          <button id="btnReset" class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 text-sm">
+            ♻️ Reset
+          </button>
         </div>
       </div>
-    </div>
-  </nav>
+    </header>
 
-  <!-- Main Layout -->
-  <div class="flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-hidden">
+    <!-- Main -->
+    <main class="flex-1">
+      <div class="max-w-[1400px] mx-auto px-4 py-4 grid grid-cols-12 gap-4">
 
-    <!-- LEFT SIDEBAR -->
-    <aside class="hidden lg:block lg:col-span-3 xl:col-span-2 bg-white border-r border-slate-200 flex flex-col h-full z-20">
-      <div class="p-4 border-b border-slate-100 flex-none space-y-3">
-        <div onclick="loadDashboard()" class="nav-item active" id="nav-dashboard">
-          <i class="fas fa-th-large w-5 text-center"></i>
-          <span class="ml-2">Dashboard</span>
-        </div>
-
-        <div class="relative">
-          <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-sm"></i>
-          <input type="text" id="sidebar-search" placeholder="Search units..."
-            class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
-            oninput="filterUnits()" />
-        </div>
-
-        <div class="p-3 bg-indigo-50 rounded-lg border border-indigo-100 flex items-center gap-3 cursor-pointer hover:bg-indigo-100 transition-colors group">
-          <div class="bg-white p-1.5 rounded text-red-500 shadow-sm">
-            <i class="fas fa-file-pdf text-lg"></i>
-          </div>
-          <div class="flex-1 overflow-hidden">
-            <a href="assets/English-Collocations-in-Use-Advanced.pdf" target="_blank"
-              class="text-xs font-bold text-indigo-900 group-hover:underline truncate block">Course PDF Book</a>
-            <span class="text-[10px] text-indigo-500 block">Cambridge Advanced</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex-1 overflow-y-auto px-2 pb-4 scroll-smooth" id="unit-list-container"></div>
-    </aside>
-
-    <!-- CENTER CONTENT -->
-    <main class="col-span-1 lg:col-span-9 xl:col-span-10 flex flex-col h-full bg-[#f8fafc] overflow-hidden relative">
-
-      <!-- DASHBOARD VIEW -->
-      <div id="view-dashboard" class="flex-1 overflow-y-auto p-6 lg:p-10 animate-fade-in scroll-smooth">
-        <div class="max-w-7xl mx-auto">
-          <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <div>
-              <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Course Dashboard</h1>
-              <p class="text-slate-500 mt-1">Master 400+ collocations across 20 specialized units (20+ per unit).</p>
+        <!-- Sidebar: Units / Progress -->
+        <aside class="col-span-12 lg:col-span-3">
+          <div class="bg-white rounded-2xl border shadow-sm p-4">
+            <div class="flex items-center justify-between">
+              <h2 class="font-semibold">Lộ trình theo Unit</h2>
+              <span id="progressText" class="text-xs text-slate-500"></span>
             </div>
-            <div class="flex gap-3">
-              <div class="flex flex-col items-end px-4 py-2 bg-white rounded-lg border border-slate-200 shadow-sm">
-                <span class="text-[10px] text-slate-400 font-bold uppercase">Progress</span>
-                <span class="text-indigo-600 font-bold">12% Completed</span>
-              </div>
-            </div>
-          </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="dashboard-grid"></div>
-        </div>
-      </div>
-
-      <!-- UNIT VIEW -->
-      <div id="view-unit" class="hidden flex-col h-full">
-
-        <!-- Unit Header -->
-        <div class="flex-none px-6 lg:px-10 pt-6 pb-0 bg-white border-b border-slate-100 shadow-sm z-10">
-          <div class="flex items-center justify-between mb-6">
-            <div>
-              <button onclick="loadDashboard()" class="text-xs text-slate-500 hover:text-indigo-600 mb-3 flex items-center gap-1 font-medium transition-colors">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            <div class="mt-3 flex gap-2">
+              <button id="btnTOCDefault" class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 text-xs">
+                Dùng mục lục mẫu
               </button>
-              <h1 id="main-unit-title" class="text-2xl font-bold text-slate-800">Unit Title</h1>
-              <p id="main-unit-desc" class="text-slate-500 text-sm mt-1">Unit description placeholder.</p>
-            </div>
-
-            <div class="hidden md:block">
-              <div class="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-                <div class="text-right">
-                  <div class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Total Items</div>
-                  <div id="unit-total-items" class="text-xl font-bold text-indigo-600 leading-none">20</div>
-                </div>
-                <div class="h-8 w-px bg-slate-200"></div>
-                <div class="text-right">
-                  <div class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Unit No.</div>
-                  <div id="unit-display-id" class="text-xl font-bold text-slate-800 leading-none">01</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tabs -->
-          <div class="flex gap-8">
-            <button onclick="switchTab('learn')" id="tab-learn"
-              class="pb-3 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600 transition-colors flex items-center gap-2 outline-none">
-              <i class="fas fa-book-open"></i>Theory List
-            </button>
-            <button onclick="switchTab('flashcard')" id="tab-flashcard"
-              class="pb-3 text-sm font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 transition-colors flex items-center gap-2 outline-none">
-              <i class="fas fa-clone"></i>Flashcards
-            </button>
-            <button onclick="switchTab('quiz')" id="tab-quiz"
-              class="pb-3 text-sm font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 transition-colors flex items-center gap-2 outline-none">
-              <i class="fas fa-brain"></i>AI Practice
-            </button>
-          </div>
-        </div>
-
-        <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto p-6 lg:p-10 space-y-6 scroll-smooth bg-slate-50/50">
-
-          <!-- Tab: Learn -->
-          <div id="content-learn" class="animate-fade-in max-w-6xl mx-auto space-y-6 pb-10">
-
-            <!-- AI Assistant Bar -->
-            <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl p-1 shadow-lg">
-              <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 flex items-center justify-between">
-                <div class="flex items-center gap-3 text-white pl-2">
-                  <i class="fas fa-robot text-xl"></i>
-                  <div>
-                    <h3 class="font-bold text-sm">ColloMaster AI Assistant</h3>
-                    <p class="text-xs text-indigo-100 opacity-80">Analyze all collocations in this unit for deeper context.</p>
-                  </div>
-                </div>
-                <button onclick="askAI('Analyze this unit')" class="bg-white text-indigo-700 hover:bg-indigo-50 px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center gap-2">
-                  <i class="fas fa-magic"></i> Analyze Unit
-                </button>
-              </div>
-            </div>
-
-            <!-- AI output panel (fix: now AI analysis is visible, not just toast) -->
-            <div id="ai-output" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600"><i class="fas fa-wand-magic-sparkles"></i></div>
-                  <div>
-                    <div class="text-sm font-bold text-slate-800">AI Analysis</div>
-                    <div class="text-xs text-slate-500">Unit-level notes & patterns</div>
-                  </div>
-                </div>
-                <button class="text-xs font-bold text-slate-500 hover:text-slate-800" onclick="document.getElementById('ai-output').classList.add('hidden')">
-                  <i class="fas fa-eye-slash mr-1"></i>Hide
-                </button>
-              </div>
-              <div id="ai-output-body" class="text-sm text-slate-700 leading-relaxed"></div>
-            </div>
-
-            <!-- Search Filter inside Unit -->
-            <div class="relative">
-              <input type="text" id="unit-search" onkeyup="filterCollocations()" placeholder="Filter collocations by word or meaning..."
-                class="w-full border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/50 outline-none shadow-sm" />
-              <i class="fas fa-search absolute left-3.5 top-3 text-slate-400"></i>
-            </div>
-
-            <div id="theory-container" class="space-y-8"></div>
-          </div>
-
-          <!-- Tab: Flashcards -->
-          <div id="content-flashcard" class="hidden animate-fade-in h-full flex flex-col items-center justify-start pt-2">
-            <div class="w-full max-w-2xl mb-4 flex justify-between items-center">
-              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Review Mode</span>
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-500">Auto-play</span>
-                <button id="autoplayToggle" class="w-10 h-5 bg-slate-200 rounded-full relative cursor-pointer border border-slate-300" onclick="toggleAutoplay()">
-                  <span id="autoplayKnob" class="w-5 h-5 bg-white rounded-full shadow border border-slate-300 absolute left-0 top-0"></span>
-                </button>
-              </div>
-            </div>
-
-            <div class="w-full max-w-2xl perspective-1000 group h-96 cursor-pointer" onclick="toggleFlip(this)">
-              <div id="flashcard-inner" class="card-flip-inner relative w-full h-full transform-style-3d shadow-xl rounded-2xl">
-                <!-- Front -->
-                <div class="absolute w-full h-full bg-white rounded-2xl p-12 flex flex-col items-center justify-center backface-hidden border border-slate-200">
-                  <span id="fc-unit" class="absolute top-6 left-6 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">Unit 1</span>
-                  <span class="absolute top-6 right-6 text-slate-300 text-6xl opacity-20 font-serif">"</span>
-
-                  <h2 id="fc-front" class="text-4xl font-bold text-slate-800 text-center mb-4 leading-tight">-</h2>
-                  <p id="fc-hint" class="text-slate-400 text-sm bg-slate-50 px-3 py-1 rounded-full">Hint: Verb + Noun</p>
-
-                  <div class="absolute bottom-8 text-slate-300 text-xs animate-bounce">Click card to flip</div>
-                </div>
-
-                <!-- Back -->
-                <div class="absolute w-full h-full bg-gradient-to-br from-indigo-600 to-blue-700 text-white rounded-2xl p-12 flex flex-col items-center justify-center backface-hidden rotate-y-180">
-                  <h3 id="fc-back" class="text-3xl font-bold mb-6 border-b-2 border-white/20 pb-4">-</h3>
-                  <p id="fc-context" class="text-center text-lg leading-relaxed opacity-90">-</p>
-                  <p id="fc-example" class="mt-6 text-sm italic opacity-75 bg-black/10 px-4 py-2 rounded-lg">"-"</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-6 mt-10">
-              <button onclick="prevCard()" class="w-12 h-12 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-600 transition-all flex items-center justify-center shadow-sm">
-                <i class="fas fa-arrow-left"></i>
-              </button>
-              <span id="card-counter" class="text-base font-bold text-slate-600 w-24 text-center">1 / 20</span>
-              <button onclick="nextCard()" class="w-12 h-12 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-600 transition-all flex items-center justify-center shadow-sm">
-                <i class="fas fa-arrow-right"></i>
+              <button id="btnTOCEdit" class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 text-xs">
+                Sửa map trang
               </button>
             </div>
-          </div>
 
-          <!-- Tab: Quiz (FIX: now has an output area and renders questions) -->
-          <div id="content-quiz" class="hidden animate-fade-in max-w-4xl mx-auto space-y-6">
-            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm text-center">
-              <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-brain text-2xl text-indigo-600"></i>
+            <div id="tocEditBox" class="hidden mt-3">
+              <div class="text-xs text-slate-600 mb-2">
+                Bạn có thể chỉnh “PDF page” cho đúng với file của bạn (đặc biệt nếu PDF là bản trích). Mỗi dòng: <span class="mono">unitId|pdfPage</span>
               </div>
-              <h3 class="text-xl font-bold text-slate-800 mb-2">AI Practice Generator</h3>
-              <p class="text-slate-500 mb-6">Generate a unique quiz based on the collocations in this unit.</p>
-
-              <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <button onclick="generateAIQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 transition-all transform hover:scale-105">
-                  Create Quiz
+              <textarea id="tocEditor" class="w-full h-40 p-2 border rounded-xl text-xs mono"></textarea>
+              <div class="mt-2 flex gap-2">
+                <button id="btnApplyTOC" class="px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs">
+                  Áp dụng
                 </button>
-                <button onclick="toggleQuizAnswers()" class="bg-white hover:bg-slate-50 text-slate-700 px-8 py-3 rounded-xl font-bold border border-slate-200 shadow-sm transition-all">
-                  Show/Hide Answers
+                <button id="btnCancelTOC" class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 text-xs">
+                  Hủy
                 </button>
               </div>
             </div>
 
-            <div id="quiz-output" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-6"></div>
+            <div class="mt-4">
+              <input id="unitSearch" class="w-full px-3 py-2 border rounded-xl text-sm" placeholder="Tìm Unit (vd: growing, business, writing)..." />
+            </div>
+
+            <div id="unitList" class="mt-3 space-y-2 max-h-[62vh] overflow-auto pr-1"></div>
           </div>
-        </div>
+
+          <div class="bg-white rounded-2xl border shadow-sm p-4 mt-4">
+            <h3 class="font-semibold">Ghi chú nhanh</h3>
+            <textarea id="quickNotes" class="mt-2 w-full h-32 p-3 border rounded-xl text-sm" placeholder="Ghi chú từ vựng/collocation bạn muốn nhớ..."></textarea>
+            <div class="mt-2 text-xs text-slate-500">
+              Ghi chú được lưu trên trình duyệt (localStorage).
+            </div>
+          </div>
+        </aside>
+
+        <!-- PDF Viewer -->
+        <section class="col-span-12 lg:col-span-6">
+          <div class="bg-white rounded-2xl border shadow-sm">
+            <div class="p-4 border-b flex items-center gap-2">
+              <div class="font-semibold">PDF Viewer</div>
+              <div class="ml-auto flex items-center gap-2">
+                <button id="btnPrev" class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 text-sm">◀</button>
+                <div class="text-sm">
+                  Trang <span id="pageNum">-</span>/<span id="pageCount">-</span>
+                </div>
+                <button id="btnNext" class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 text-sm">▶</button>
+
+                <div class="w-px h-7 bg-slate-200 mx-1"></div>
+
+                <button id="btnZoomOut" class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 text-sm">−</button>
+                <button id="btnZoomIn" class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 text-sm">＋</button>
+              </div>
+            </div>
+
+            <div class="p-4">
+              <div id="pdfHint" class="p-4 rounded-xl bg-slate-50 border text-sm text-slate-700">
+                1) Bấm <b>Chọn PDF</b> để mở sách trên máy bạn. <br/>
+                2) Chọn Unit ở cột trái để nhảy đến trang tương ứng. <br/>
+                3) Làm Writing ở cột phải và bấm <b>Chấm/Sửa</b>.
+              </div>
+
+              <div id="pdfWrap" class="hidden">
+                <div class="w-full overflow-auto rounded-xl border bg-slate-100">
+                  <canvas id="pdfCanvas" class="block mx-auto"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border shadow-sm p-4 mt-4">
+            <h3 class="font-semibold">Checklist học mỗi Unit (gợi ý)</h3>
+            <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+              <label class="flex items-start gap-2"><input type="checkbox" class="mt-1" data-check="skim" /> Skim bài + gạch từ mới</label>
+              <label class="flex items-start gap-2"><input type="checkbox" class="mt-1" data-check="collocations" /> Ghi collocations/word families</label>
+              <label class="flex items-start gap-2"><input type="checkbox" class="mt-1" data-check="practice" /> Làm bài tập trong Unit</label>
+              <label class="flex items-start gap-2"><input type="checkbox" class="mt-1" data-check="review" /> Ôn lại bằng câu ví dụ (5–10 câu)</label>
+            </div>
+            <div class="mt-2 text-xs text-slate-500">
+              Checklist này lưu theo trình duyệt, không liên quan nội dung bản quyền trong sách.
+            </div>
+          </div>
+        </section>
+
+        <!-- Writing Corrector -->
+        <aside class="col-span-12 lg:col-span-3">
+          <div class="bg-white rounded-2xl border shadow-sm p-4">
+            <h2 class="font-semibold">Writing Corrector (ChatGPT)</h2>
+
+            <div class="mt-2 p-3 rounded-xl bg-amber-50 border text-xs text-amber-900">
+              ⚠️ <b>Khuyến nghị</b>: Dùng “Proxy mode” (server) để giữ an toàn API key. OpenAI khuyến cáo không để key trong client. :contentReference[oaicite:2]{index=2}
+            </div>
+
+            <div class="mt-3">
+              <label class="text-xs text-slate-600">Chế độ gọi API</label>
+              <div class="mt-1 flex gap-2">
+                <button id="modeClient" class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 text-xs">Client mode (nhanh)</button>
+                <button id="modeProxy" class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 text-xs">Proxy mode (an toàn)</button>
+              </div>
+              <div id="modeHint" class="mt-2 text-xs text-slate-500"></div>
+            </div>
+
+            <div class="mt-3">
+              <label class="text-xs text-slate-600">API key (chỉ lưu local)</label>
+              <input id="apiKey" type="password" class="mt-1 w-full px-3 py-2 border rounded-xl text-sm" placeholder="sk-..." />
+            </div>
+
+            <div class="mt-3">
+              <label class="text-xs text-slate-600">Proxy URL (nếu dùng Proxy mode)</label>
+              <input id="proxyUrl" class="mt-1 w-full px-3 py-2 border rounded-xl text-sm" placeholder="Ví dụ: /api/openai" />
+              <div class="mt-1 text-xs text-slate-500">
+                Proxy sẽ nhận JSON và forward tới OpenAI. (Mình để mẫu code proxy ở cuối file này.)
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="text-xs text-slate-600">Loại bài</label>
+              <select id="taskType" class="mt-1 w-full px-3 py-2 border rounded-xl text-sm">
+                <option value="ielts_task1_academic">IELTS Academic Task 1</option>
+                <option value="ielts_task2_academic" selected>IELTS Academic Task 2</option>
+                <option value="ielts_gt_task1">General Training Task 1</option>
+                <option value="ielts_gt_task2">General Training Task 2</option>
+              </select>
+            </div>
+
+            <div class="mt-3">
+              <label class="text-xs text-slate-600">Đề bài (prompt)</label>
+              <textarea id="writingPrompt" class="mt-1 w-full h-24 p-3 border rounded-xl text-sm" placeholder="Dán đề IELTS vào đây..."></textarea>
+            </div>
+
+            <div class="mt-3">
+              <label class="text-xs text-slate-600">Bài bạn viết</label>
+              <textarea id="writingDraft" class="mt-1 w-full h-40 p-3 border rounded-xl text-sm" placeholder="Dán bài viết của bạn vào đây..."></textarea>
+            </div>
+
+            <div class="mt-3 flex gap-2">
+              <button id="btnCheck" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-sm">
+                ✅ Chấm / Sửa
+              </button>
+              <button id="btnClearWriting" class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 text-sm">
+                Xóa
+              </button>
+            </div>
+
+            <div class="mt-3">
+              <label class="text-xs text-slate-600">Kết quả</label>
+              <div id="resultBox" class="mt-1 w-full min-h-40 p-3 border rounded-xl text-sm bg-slate-50 whitespace-pre-wrap"></div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border shadow-sm p-4 mt-4">
+            <h3 class="font-semibold">Từ vựng theo Unit đang học</h3>
+            <div class="mt-2 text-xs text-slate-500">
+              Khi bạn chọn Unit ở cột trái, app sẽ dùng tên chủ đề Unit để gợi ý chấm bài “ưu tiên vocabulary theo chủ đề”.
+            </div>
+            <div id="activeUnitBox" class="mt-3 p-3 rounded-xl border bg-white">
+              <div class="text-sm font-medium" id="activeUnitTitle">Chưa chọn Unit</div>
+              <div class="text-xs text-slate-500" id="activeUnitTopics">—</div>
+            </div>
+          </div>
+        </aside>
       </div>
     </main>
+
+    <footer class="border-t bg-white">
+      <div class="max-w-[1400px] mx-auto px-4 py-4 text-xs text-slate-500">
+        App học sách dựa trên việc bạn tự mở PDF. Không sao chép nội dung sách ra ngoài.
+      </div>
+    </footer>
   </div>
 
-  <!-- API Key Modal -->
-  <div id="apiModal" class="modal fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-    <div class="modal-content bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-      <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-        <h3 class="text-lg font-bold text-slate-800">Settings & API Key</h3>
-        <button onclick="closeApiModal()" class="text-slate-400 hover:text-slate-600">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="p-6 space-y-4">
-        <div class="bg-blue-50 text-blue-800 text-xs p-3 rounded-lg">
-          <i class="fas fa-info-circle mr-1"></i> Your key is stored locally in your browser.
-        </div>
-        <input type="password" id="apiKeyInput" placeholder="sk-................................"
-          class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-        <div class="text-[11px] text-slate-500 leading-relaxed">
-          Lưu ý: Gọi OpenAI trực tiếp từ file HTML có thể bị CORS trên một số môi trường. Nếu gọi API thất bại, app sẽ tự động fallback sang chế độ “local quiz generator” và vẫn hiển thị bài tập.
-        </div>
-      </div>
-      <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-        <button onclick="saveApiKey()" class="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 transition-colors">
-          Save & Connect
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast -->
-  <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-4 rounded-lg shadow-xl transform translate-y-32 transition-all duration-300 z-50 flex items-center gap-4">
-    <div id="toast-bubble" class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-      <i id="toast-icon" class="fas fa-check text-green-400"></i>
-    </div>
-    <div>
-      <h4 class="font-bold text-sm" id="toast-title">Success</h4>
-      <p class="text-xs text-slate-300" id="toast-msg">Message here</p>
-    </div>
-  </div>
-
-  <script>
-    // ====== DATA SOURCE ======
-    // (Các unit có ít item sẽ được tự động bổ sung để đảm bảo >= 20 collocations / unit)
-    const fullCourseData = {
-      1: [
-        { word: "commit a crime", def: "To do something illegal", example: "He committed a serious crime.", type: "Verb + Noun" },
-        { word: "make a mistake", def: "To do something wrong", example: "I made a few mistakes in the exam.", type: "Verb + Noun" },
-        { word: "do homework", def: "To study at home", example: "Have you done your homework yet?", type: "Verb + Noun" },
-        { word: "make an effort", def: "To try hard", example: "You must make an effort to improve.", type: "Verb + Noun" },
-        { word: "do someone a favour", def: "To help someone", example: "Could you do me a favour?", type: "Verb + Noun" },
-        { word: "powerful engine", def: "An engine with great force", example: "The car has a powerful engine.", type: "Adj + Noun" },
-        { word: "ancient monument", def: "Very old building/statue", example: "We visited an ancient monument.", type: "Adj + Noun" },
-        { word: "substantial meal", def: "A large meal", example: "Breakfast is a substantial meal.", type: "Adj + Noun" },
-        { word: "bitterly cold", def: "Extremely cold", example: "It was bitterly cold yesterday.", type: "Adv + Adj" },
-        { word: "strictly forbidden", def: "Not allowed at all", example: "Smoking is strictly forbidden.", type: "Adv + Adj" },
-        { word: "make a decision", def: "To decide", example: "We need to make a decision soon.", type: "Verb + Noun" },
-        { word: "take a risk", def: "To do something dangerous", example: "Investing in stocks involves taking a risk.", type: "Verb + Noun" },
-      ],
-      2: [
-        { word: "career ladder", def: "A series of jobs from lower to higher", example: "He is moving up the career ladder.", type: "Noun + Noun" },
-        { word: "job description", def: "List of responsibilities", example: "Read the job description carefully.", type: "Noun + Noun" },
-        { word: "household name", def: "A person/thing everyone knows", example: "Coca-Cola is a household name.", type: "Noun + Noun" },
-        { word: "coin a phrase", def: "Invent a new expression", example: "Shakespeare coined many phrases.", type: "Verb + Noun" },
-        { word: "shelf life", def: "How long a product lasts", example: "Milk has a short shelf life.", type: "Noun + Noun" }
-      ],
-      8: [
-        { word: "hand in your resignation", def: "To officially quit a job", example: "She handed in her resignation yesterday.", type: "Verb + Noun" },
-        { word: "fit the job description", def: "To have suitable skills", example: "He fits the job description perfectly.", type: "Verb + Noun" },
-        { word: "take on responsibility", def: "To accept more work/duty", example: "I am ready to take on more responsibility.", type: "Verb + Noun" },
-        { word: "working conditions", def: "The environment of a job", example: "The working conditions here are excellent.", type: "Noun + Noun" },
-        { word: "sick leave", def: "Time off due to illness", example: "He is on sick leave.", type: "Noun + Noun" }
-      ],
-      12: [
-        { word: "make friends", def: "To begin a friendship", example: "It's easy to make friends here.", type: "Verb + Noun" },
-        { word: "strike up a friendship", def: "To start a friendship", example: "They struck up a friendship immediately.", type: "Verb + Noun" },
-        { word: "keep in touch", def: "To maintain contact", example: "Let's keep in touch after graduation.", type: "Verb + Expression" },
-        { word: "lose contact", def: "To stop communicating", example: "I lost contact with him years ago.", type: "Verb + Noun" },
-        { word: "love at first sight", def: "Falling in love immediately", example: "It was love at first sight.", type: "Expression" }
-      ],
-      13: [
-        { word: "bear in mind", def: "To remember/consider", example: "Please bear in mind the rules.", type: "Verb + Noun" },
-        { word: "change your mind", def: "To alter your decision", example: "I have changed my mind about the car.", type: "Verb + Noun" },
-        { word: "make up your mind", def: "To decide", example: "You need to make up your mind soon.", type: "Verb + Noun" },
-        { word: "speak your mind", def: "To say what you think", example: "Don't be afraid to speak your mind.", type: "Verb + Noun" },
-        { word: "it slipped my mind", def: "I forgot it", example: "I'm sorry, the meeting slipped my mind.", type: "Expression" }
-      ],
-      19: [
-        { word: "processed food", def: "Food treated/changed during production", example: "Avoid eating too much processed food.", type: "Adj + Noun" },
-        { word: "light meal", def: "A small meal", example: "We just had a light meal.", type: "Adj + Noun" },
-        { word: "spoil your appetite", def: "Eat something that makes you not hungry for a meal", example: "Don't eat sweets, you'll spoil your appetite.", type: "Verb + Noun" },
-        { word: "set menu", def: "A menu with fixed dishes and price", example: "The set menu is good value.", type: "Noun + Noun" },
-        { word: "food poisoning", def: "Illness from bad food", example: "He got food poisoning from the fish.", type: "Noun + Noun" },
-        { word: "home-cooked food", def: "Food cooked at home", example: "I miss home-cooked food.", type: "Adj + Noun" }
-      ],
-      20: [
-        { word: "catch a cold", def: "To become sick with a cold", example: "Wear a coat or you'll catch a cold.", type: "Verb + Noun" },
-        { word: "course of antibiotics", def: "A set period of taking antibiotics", example: "Finish the full course of antibiotics.", type: "Noun + Noun" },
-        { word: "suffer from asthma", def: "To have a specific disease", example: "She suffers from asthma.", type: "Verb + Noun" },
-        { word: "splitting headache", def: "A very severe headache", example: "I have a splitting headache.", type: "Adj + Noun" },
-        { word: "run a temperature", def: "To have a fever", example: "The baby is running a temperature.", type: "Verb + Noun" }
-      ]
-    };
-
-    const unitTitles = {
-      1: "Learning collocations", 2: "New words", 3: "Using your dictionary", 4: "Types of collocation",
-      5: "Register", 6: "Metaphor", 7: "Study and learning", 8: "Work", 9: "Business", 10: "Academic writing 1",
-      11: "Academic writing 2", 12: "Relationships", 13: "Thoughts and ideas", 14: "Agreeing and disagreeing",
-      15: "Talking", 16: "Likes and dislikes", 17: "Emotions and feelings", 18: "Social life", 19: "Food and drink", 20: "Health and fitness"
-    };
-
-    // ====== COLLLOCATION TOPIC BANKS (>=20 each after fill) ======
-    const topicBanks = {
-      "Work": [
-        ["meet a deadline","Finish work by a required time","We must meet the deadline.", "Verb + Noun"],
-        ["work overtime","Work extra hours","He worked overtime all week.", "Verb + Noun"],
-        ["take annual leave","Take paid holiday from work","I’m taking annual leave next month.", "Verb + Noun"],
-        ["apply for a job","Send an application for employment","She applied for a job abroad.", "Verb + Noun"],
-        ["attend an interview","Go to a job interview","He attended an interview yesterday.", "Verb + Noun"],
-        ["accept an offer","Agree to take a job offer","She accepted the offer immediately.", "Verb + Noun"],
-        ["turn down an offer","رفض عرض (decline)","He turned down the offer politely.", "Verb + Noun"],
-        ["start a new position","Begin a new job role","I start a new position on Monday.", "Verb + Noun"],
-        ["gain experience","Get useful work experience","You’ll gain experience quickly.", "Verb + Noun"],
-        ["develop skills","Improve abilities","The role helps you develop skills.", "Verb + Noun"],
-        ["take on a role","Accept a role","He took on a leadership role.", "Verb + Noun"],
-        ["delegate tasks","Assign tasks to others","Managers delegate tasks.", "Verb + Noun"],
-        ["hold a meeting","Organize a meeting","Let’s hold a meeting tomorrow.", "Verb + Noun"],
-        ["reach an agreement","Come to a shared decision","We reached an agreement.", "Verb + Noun"],
-        ["resolve a conflict","Settle a disagreement","They resolved the conflict.", "Verb + Noun"],
-        ["job satisfaction","Feeling content with your job","Job satisfaction matters.", "Noun + Noun"],
-        ["work-life balance","Balance between job and personal life","She values work-life balance.", "Noun + Noun"],
-        ["career prospects","Chances for future career success","The career prospects are strong.", "Noun + Noun"],
-        ["heavy workload","A lot of work to do","He has a heavy workload.", "Adj + Noun"],
-        ["competitive salary","High salary compared to others","They offer a competitive salary.", "Adj + Noun"]
-      ],
-      "Business": [
-        ["launch a product","Introduce a new product","They launched a product in June.", "Verb + Noun"],
-        ["raise capital","Get money for business","Startups raise capital early.", "Verb + Noun"],
-        ["cut costs","Reduce expenses","We need to cut costs.", "Verb + Noun"],
-        ["increase revenue","Make more money","The plan increased revenue.", "Verb + Noun"],
-        ["boost profits","Increase profits","The campaign boosted profits.", "Verb + Noun"],
-        ["enter a market","Start operating in a market","They entered the Asian market.", "Verb + Noun"],
-        ["gain market share","Increase your share of sales","They gained market share.", "Verb + Noun"],
-        ["sign a contract","Agree formally in writing","We signed a contract today.", "Verb + Noun"],
-        ["negotiate terms","Discuss conditions of a deal","They negotiated terms.", "Verb + Noun"],
-        ["reach a deal","Achieve an agreement","We reached a deal.", "Verb + Noun"],
-        ["deliver results","Produce outcomes","The strategy delivered results.", "Verb + Noun"],
-        ["build a brand","Create brand identity","They built a strong brand.", "Verb + Noun"],
-        ["brand loyalty","Customers’ commitment to a brand","Brand loyalty is high.", "Noun + Noun"],
-        ["customer base","Group of customers","Their customer base is growing.", "Noun + Noun"],
-        ["sales target","Goal for sales numbers","We missed the sales target.", "Noun + Noun"],
-        ["profit margin","Difference between cost and selling price","Profit margin improved.", "Noun + Noun"],
-        ["strong demand","High demand","There is strong demand.", "Adj + Noun"],
-        ["price sensitivity","How customers react to price changes","Price sensitivity varies.", "Noun + Noun"],
-        ["strategic partnership","Important business relationship","A strategic partnership was formed.", "Adj + Noun"],
-        ["competitive advantage","Benefit over competitors","Technology gives a competitive advantage.", "Adj + Noun"]
-      ],
-      "Academic writing": [
-        ["make a claim","State an argument","The paper makes a strong claim.", "Verb + Noun"],
-        ["support an argument","Provide evidence","You must support your argument.", "Verb + Noun"],
-        ["cite a source","Refer to a reference","Remember to cite a source.", "Verb + Noun"],
-        ["draw a conclusion","Conclude from evidence","We can draw a conclusion.", "Verb + Noun"],
-        ["conduct research","Do research","They conducted research on sleep.", "Verb + Noun"],
-        ["collect data","Gather information","We collected data carefully.", "Verb + Noun"],
-        ["analyze findings","Examine results","They analyzed findings.", "Verb + Noun"],
-        ["present evidence","Show proof","The author presents evidence.", "Verb + Noun"],
-        ["address a gap","Deal with a missing area","This study addresses a gap.", "Verb + Noun"],
-        ["pose a question","Ask a formal question","The paper poses a question.", "Verb + Noun"],
-        ["provide insight","Offer understanding","The results provide insight.", "Verb + Noun"],
-        ["academic integrity","Honesty in academic work","Academic integrity is essential.", "Adj + Noun"],
-        ["research question","Key question of a study","Define the research question.", "Noun + Noun"],
-        ["literature review","Summary of previous studies","Write a literature review.", "Noun + Noun"],
-        ["methodological rigor","High standard methods","The study shows methodological rigor.", "Adj + Noun"],
-        ["robust evidence","Strong evidence","The paper provides robust evidence.", "Adj + Noun"],
-        ["critical analysis","Careful evaluation","Use critical analysis.", "Adj + Noun"],
-        ["significant limitation","Important weakness","There is a significant limitation.", "Adj + Noun"],
-        ["future research","Research done later","Future research should explore this.", "Adj + Noun"],
-        ["overall contribution","General impact","The overall contribution is clear.", "Adj + Noun"]
-      ],
-      "Relationships": [
-        ["build trust","Create trust over time","They built trust slowly.", "Verb + Noun"],
-        ["break up","End a relationship","They broke up last year.", "Verb + Expression"],
-        ["make up","Become friends again after arguing","They made up quickly.", "Verb + Expression"],
-        ["fall out","Argue and stop being friendly","They fell out over money.", "Verb + Expression"],
-        ["get on well","Have a good relationship","They get on well.", "Verb + Expression"],
-        ["keep a promise","Do what you said you would do","You should keep a promise.", "Verb + Noun"],
-        ["break a promise","Fail to keep your word","He broke a promise.", "Verb + Noun"],
-        ["show affection","Demonstrate love/care","He shows affection openly.", "Verb + Noun"],
-        ["express gratitude","Say thank you sincerely","She expressed gratitude.", "Verb + Noun"],
-        ["offer support","Provide help","Friends offer support.", "Verb + Noun"],
-        ["family ties","Connections within a family","Family ties are strong.", "Noun + Noun"],
-        ["close friend","Very good friend","She’s a close friend of mine.", "Adj + Noun"],
-        ["long-term relationship","Relationship lasting a long time","They are in a long-term relationship.", "Adj + Noun"],
-        ["mutual respect","Respect shared by both sides","Mutual respect matters.", "Adj + Noun"],
-        ["strong bond","Powerful connection","They have a strong bond.", "Adj + Noun"],
-        ["endless arguments","Arguments that continue often","They had endless arguments.", "Adj + Noun"],
-        ["healthy boundaries","Appropriate limits","Set healthy boundaries.", "Adj + Noun"],
-        ["shared interests","Things both people enjoy","They have shared interests.", "Adj + Noun"],
-        ["lose touch","Stop communicating","We lost touch after college.", "Verb + Noun"],
-        ["stay in touch","Maintain contact","We stay in touch online.", "Verb + Noun"]
-      ],
-      "Food and drink": [
-        ["take a bite","Eat a small piece","Take a bite of this.", "Verb + Noun"],
-        ["have a snack","Eat a small amount","I had a snack at noon.", "Verb + Noun"],
-        ["skip breakfast","Not eat breakfast","Don’t skip breakfast.", "Verb + Noun"],
-        ["work up an appetite","Become hungry","A walk works up an appetite.", "Verb + Noun"],
-        ["serve a meal","Provide food","They served a delicious meal.", "Verb + Noun"],
-        ["order takeout","Buy hot food to eat at home","We ordered takeout.", "Verb + Noun"],
-        ["fresh produce","Fresh fruits and vegetables","Fresh produce is expensive.", "Adj + Noun"],
-        ["balanced diet","Healthy mix of foods","Aim for a balanced diet.", "Adj + Noun"],
-        ["spicy food","Food with a strong hot taste","She loves spicy food.", "Adj + Noun"],
-        ["sweet tooth","Love for sweet foods","He has a sweet tooth.", "Noun + Noun"],
-        ["table manners","Polite behavior at meals","Good table manners matter.", "Noun + Noun"],
-        ["food cravings","Strong desire to eat something","I get food cravings at night.", "Noun + Noun"],
-        ["home-made sauce","Sauce made at home","Try the home-made sauce.", "Adj + Noun"],
-        ["strong coffee","Coffee with intense flavor","I need strong coffee.", "Adj + Noun"],
-        ["sparkling water","Carbonated water","Sparkling water is refreshing.", "Adj + Noun"],
-        ["seasonal ingredients","Ingredients available in season","Use seasonal ingredients.", "Adj + Noun"],
-        ["overcook the rice","Cook too long","Don’t overcook the rice.", "Verb + Noun"],
-        ["slice the bread","Cut bread into slices","Slice the bread thinly.", "Verb + Noun"],
-        ["bottle of wine","One bottle of wine","A bottle of wine was opened.", "Noun + Noun"],
-        ["soft drink","Non-alcoholic fizzy drink","He ordered a soft drink.", "Adj + Noun"]
-      ],
-      "Health and fitness": [
-        ["do regular exercise","Exercise often","Try to do regular exercise.", "Verb + Adj + Noun"],
-        ["go for a run","Run outdoors","I go for a run daily.", "Verb + Noun"],
-        ["build muscle","Increase muscle mass","This plan builds muscle.", "Verb + Noun"],
-        ["lose weight","Reduce body weight","He wants to lose weight.", "Verb + Noun"],
-        ["gain weight","Increase body weight","She gained weight quickly.", "Verb + Noun"],
-        ["maintain a healthy weight","Keep weight at healthy level","Maintain a healthy weight.", "Verb + Adj + Noun"],
-        ["get enough sleep","Sleep sufficiently","Get enough sleep.", "Verb + Adj + Noun"],
-        ["manage stress","Control stress","Learn to manage stress.", "Verb + Noun"],
-        ["take medication","Use medicine","Take medication as directed.", "Verb + Noun"],
-        ["recover from illness","Get well again","He recovered from illness.", "Verb + Noun"],
-        ["medical check-up","Routine health examination","Book a medical check-up.", "Adj + Noun"],
-        ["healthy lifestyle","Way of living that supports health","A healthy lifestyle helps.", "Adj + Noun"],
-        ["balanced nutrition","Good balance of nutrients","Balanced nutrition is key.", "Adj + Noun"],
-        ["high blood pressure","Hypertension","High blood pressure is common.", "Adj + Noun"],
-        ["chronic pain","Pain that lasts long","Chronic pain affects sleep.", "Adj + Noun"],
-        ["physical fitness","Overall body health and strength","Physical fitness improves mood.", "Adj + Noun"],
-        ["cardiovascular health","Heart and blood vessel health","Cardiovascular health matters.", "Adj + Noun"],
-        ["muscle soreness","Pain after exercise","Muscle soreness is normal.", "Noun + Noun"],
-        ["training routine","Regular training plan","Stick to a training routine.", "Noun + Noun"],
-        ["injury prevention","Avoiding injuries","Warm up for injury prevention.", "Noun + Noun"]
-      ]
-    };
-
-    function normalizeTitle(title) {
-      // Map unit titles to banks
-      if (title.toLowerCase().includes("work")) return "Work";
-      if (title.toLowerCase().includes("business")) return "Business";
-      if (title.toLowerCase().includes("academic writing")) return "Academic writing";
-      if (title.toLowerCase().includes("relationships")) return "Relationships";
-      if (title.toLowerCase().includes("food")) return "Food and drink";
-      if (title.toLowerCase().includes("health")) return "Health and fitness";
-      return null;
-    }
-
-    function makeGeneratedCollocations(title, needCount, usedSet) {
-      // Generic bank (topic-aware but safe)
-      const keyWords = title.split(/\s+/).map(x => x.trim()).filter(x => x.length >= 4);
-      const key = keyWords[0] ? keyWords[0].toLowerCase() : "topic";
-
-      const templates = [
-        ["Verb + Noun", (k)=>`make progress`, `To improve or advance`, (k)=>`You can make progress with daily practice.`],
-        ["Verb + Noun", (k)=>`take responsibility`, `To accept duty`, (k)=>`You should take responsibility for your work.`],
-        ["Verb + Noun", (k)=>`pay attention`, `To focus carefully`, (k)=>`Pay attention to collocations in context.`],
-        ["Verb + Noun", (k)=>`reach a conclusion`, `To decide based on evidence`, (k)=>`The data helped us reach a conclusion.`],
-        ["Verb + Noun", (k)=>`raise an issue`, `To mention a problem`, (k)=>`She raised an issue during the meeting.`],
-        ["Adj + Noun", (k)=>`key ${key}`, `Most important ${key}`, (k)=>`This is a key ${key} in the unit.`],
-        ["Adj + Noun", (k)=>`major challenge`, `A big difficulty`, (k)=>`Time is a major challenge for learners.`],
-        ["Adj + Noun", (k)=>`strong evidence`, `Convincing proof`, (k)=>`There is strong evidence for this claim.`],
-        ["Noun + Noun", (k)=>`${key} pattern`, `A typical pattern linked to ${key}`, (k)=>`Notice the ${key} pattern in examples.`],
-        ["Noun + Noun", (k)=>`common mistake`, `An error many people make`, (k)=>`Using the wrong verb is a common mistake.`],
-        ["Adv + Adj", (k)=>`highly effective`, `Very effective`, (k)=>`This method is highly effective.`],
-        ["Adv + Adj", (k)=>`deeply concerned`, `Very worried`, (k)=>`They were deeply concerned about results.`],
-        ["Expression", (k)=>`in the long run`, `Over a long period`, (k)=>`In the long run, accuracy matters.`],
-        ["Expression", (k)=>`as a rule`, `Generally`, (k)=>`As a rule, collocations sound natural.`],
-        ["Verb + Expression", (k)=>`take into account`, `Consider something`, (k)=>`Take into account the register.`],
-        ["Verb + Noun", (k)=>`set a goal`, `Decide a target`, (k)=>`Set a goal for this week.`],
-        ["Verb + Noun", (k)=>`keep a record`, `Maintain notes`, (k)=>`Keep a record of new collocations.`],
-        ["Verb + Noun", (k)=>`draw a distinction`, `Show a difference`, (k)=>`We must draw a distinction between styles.`],
-        ["Adj + Noun", (k)=>`clear explanation`, `Easy-to-understand explanation`, (k)=>`The teacher gave a clear explanation.`],
-        ["Adj + Noun", (k)=>`practical advice`, `Useful guidance`, (k)=>`Here is some practical advice.`],
-        ["Verb + Noun", (k)=>`solve a problem`, `Find an answer`, (k)=>`Let’s solve a problem together.`],
-        ["Verb + Noun", (k)=>`make an improvement`, `Improve something`, (k)=>`You can make an improvement quickly.`],
-        ["Verb + Noun", (k)=>`take a break`, `Rest briefly`, (k)=>`Take a break after 30 minutes.`],
-      ];
-
-      const out = [];
-      let attempts = 0;
-      while (out.length < needCount && attempts < 200) {
-        attempts++;
-        const t = templates[Math.floor(Math.random() * templates.length)];
-        const type = t[0];
-        const phrase = t[1](key);
-        if (usedSet.has(phrase.toLowerCase())) continue;
-        usedSet.add(phrase.toLowerCase());
-        out.push({
-          word: phrase,
-          def: t[2],
-          example: t[3](key),
-          type
-        });
-      }
-      return out;
-    }
-
-    // Ensure each unit has at least 20 collocations
-    function getUnitData(id, title) {
-      const base = (fullCourseData[id] ? [...fullCourseData[id]] : []);
-      const used = new Set(base.map(x => x.word.toLowerCase()));
-
-      const bankKey = normalizeTitle(title);
-      if (bankKey && topicBanks[bankKey]) {
-        for (const row of topicBanks[bankKey]) {
-          const w = row[0];
-          if (!used.has(w.toLowerCase())) {
-            base.push({ word: row[0], def: row[1], example: row[2], type: row[3] });
-            used.add(w.toLowerCase());
-          }
-        }
-      }
-
-      if (base.length < 20) {
-        const need = 20 - base.length;
-        base.push(...makeGeneratedCollocations(title, need, used));
-      }
-
-      // If still less (very rare), pad again
-      if (base.length < 20) {
-        base.push(...makeGeneratedCollocations(title, 20 - base.length, used));
-      }
-
-      // Limit to 24 to keep UI neat (still >=20). You can remove this if you want unlimited.
-      return base.slice(0, 24);
-    }
-
-    // ====== DATABASE ======
-    const unitDatabase = {};
-    for (let i = 1; i <= 20; i++) {
-      unitDatabase[i] = {
-        title: unitTitles[i],
-        desc: i === 1 ? "Introduction to collocations and why they matter." : `Comprehensive study material and vocabulary for ${unitTitles[i].toLowerCase()}.`,
-        items: getUnitData(i, unitTitles[i])
-      };
-    }
-
-    // ====== UI Logic ======
-    let currentUnitId = 1;
-    let currentFlashcards = [];
-    let currentCardIndex = 0;
-
-    // Flashcard autoplay
-    let autoplay = false;
-    let autoplayTimer = null;
-
-    // Quiz state
-    let quizAnswersVisible = false;
-    let lastQuizModel = "local";
-    let lastQuizQuestions = [];
-
-    function initSidebarAndDashboard() {
-      const sidebarContainer = document.getElementById('unit-list-container');
-      const dashboardContainer = document.getElementById('dashboard-grid');
-
-      let sidebarHTML = '';
-      let dashboardHTML = '';
-
-      for (let i = 1; i <= 20; i++) {
-        const data = unitDatabase[i];
-
-        sidebarHTML += `
-          <div onclick="loadUnit(${i})" class="nav-item" id="unit-item-${i}">
-            <span class="font-mono text-slate-400 text-xs w-6">${String(i).padStart(2, '0')}</span>
-            <span class="truncate">${data.title}</span>
-          </div>
-        `;
-
-        dashboardHTML += `
-          <div onclick="loadUnit(${i})" class="dash-card bg-white rounded-xl border border-slate-200 p-6 cursor-pointer relative overflow-hidden group flex flex-col h-48">
-            <div class="flex justify-between items-start mb-4">
-              <div class="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                ${i}
-              </div>
-              <div class="px-2 py-1 bg-green-50 text-green-600 text-[10px] font-bold uppercase rounded-md border border-green-100">${data.items.length} Items</div>
-            </div>
-            <h3 class="font-bold text-slate-800 text-lg mb-1 group-hover:text-indigo-600 transition-colors line-clamp-1">${data.title}</h3>
-            <p class="text-xs text-slate-500 line-clamp-2 mb-auto">${data.desc}</p>
-            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-4">
-              <div class="bg-indigo-500 h-full" style="width: ${i === 1 ? '100%' : '0%'}"></div>
-            </div>
-          </div>
-        `;
-      }
-
-      sidebarContainer.innerHTML = sidebarHTML;
-      dashboardContainer.innerHTML = dashboardHTML;
-    }
-
-    function filterUnits() {
-      const q = document.getElementById('sidebar-search').value.toLowerCase();
-      for (let i = 1; i <= 20; i++) {
-        const el = document.getElementById(`unit-item-${i}`);
-        const title = unitDatabase[i].title.toLowerCase();
-        el.style.display = title.includes(q) ? '' : 'none';
-      }
-    }
-
-    function loadDashboard() {
-      stopAutoplay();
-      document.getElementById('view-dashboard').classList.remove('hidden');
-      document.getElementById('view-unit').classList.add('hidden');
-      document.getElementById('view-unit').classList.remove('flex');
-      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-      document.getElementById('nav-dashboard').classList.add('active');
-    }
-
-    function loadUnit(unitNum) {
-      stopAutoplay();
-      currentUnitId = unitNum;
-      const data = unitDatabase[unitNum];
-
-      document.getElementById('view-dashboard').classList.add('hidden');
-      document.getElementById('view-unit').classList.remove('hidden');
-      document.getElementById('view-unit').classList.add('flex');
-
-      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-      const activeItem = document.getElementById(`unit-item-${unitNum}`);
-      if (activeItem) activeItem.classList.add('active');
-
-      document.getElementById('main-unit-title').innerText = `${unitNum}. ${data.title}`;
-      document.getElementById('unit-display-id').innerText = String(unitNum).padStart(2, '0');
-      document.getElementById('main-unit-desc').innerText = data.desc;
-      document.getElementById('unit-total-items').innerText = data.items.length;
-      document.getElementById('unit-search').value = '';
-
-      // Reset AI output + quiz output
-      document.getElementById('ai-output').classList.add('hidden');
-      document.getElementById('ai-output-body').innerHTML = '';
-      document.getElementById('quiz-output').classList.add('hidden');
-      document.getElementById('quiz-output').innerHTML = '';
-      quizAnswersVisible = false;
-
-      renderCollocations(data.items);
-
-      currentFlashcards = data.items.map(item => ({
-        front: item.word,
-        back: item.def,
-        context: item.type,
-        example: item.example
-      }));
-
-      currentCardIndex = 0;
-      updateFlashcardView();
-      switchTab('learn');
-    }
-
-    function renderCollocations(items) {
-      const theoryContainer = document.getElementById('theory-container');
-      theoryContainer.innerHTML = '';
-
-      if (items.length === 0) {
-        theoryContainer.innerHTML = `<div class="text-center text-slate-400 py-10">No collocations found.</div>`;
-        return;
-      }
-
-      const grouped = items.reduce((acc, item) => {
-        (acc[item.type] = acc[item.type] || []).push(item);
-        return acc;
-      }, {});
-
-      Object.keys(grouped).forEach(type => {
-        let groupHTML = `
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="bg-slate-50/50 px-6 py-3 border-b border-slate-100 flex justify-between items-center">
-              <h3 class="font-bold text-sm text-slate-600 uppercase tracking-wider flex items-center gap-2">
-                <i class="fas fa-layer-group text-indigo-400"></i> ${type}
-              </h3>
-              <span class="text-xs font-bold bg-white border border-slate-200 px-2 py-0.5 rounded text-slate-400">${grouped[type].length}</span>
-            </div>
-            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        `;
-
-        grouped[type].forEach(item => {
-          const safeWord = escapeHtml(item.word);
-          groupHTML += `
-            <div class="p-4 border border-slate-100 rounded-xl hover:shadow-md hover:border-indigo-100 transition-all bg-white group col-item">
-              <div class="flex items-start justify-between mb-2">
-                <span class="font-bold text-indigo-700 text-lg group-hover:text-indigo-600">${safeWord}</span>
-                <button onclick="speak('${jsString(item.word)}')" class="text-slate-300 hover:text-indigo-500 transition-colors"><i class="fas fa-volume-up"></i></button>
-              </div>
-              <p class="text-sm text-slate-600 mb-2">${escapeHtml(item.def)}</p>
-              <div class="pt-2 border-t border-slate-50">
-                <p class="text-xs text-slate-400 italic font-medium">"${escapeHtml(item.example)}"</p>
-              </div>
-            </div>
-          `;
-        });
-
-        groupHTML += `</div></div>`;
-        theoryContainer.innerHTML += groupHTML;
-      });
-    }
-
-    function filterCollocations() {
-      const query = document.getElementById('unit-search').value.toLowerCase();
-      const allItems = unitDatabase[currentUnitId].items;
-      const filtered = allItems.filter(item =>
-        item.word.toLowerCase().includes(query) ||
-        item.def.toLowerCase().includes(query)
-      );
-      renderCollocations(filtered);
-    }
-
-    // ====== Flashcards ======
-    function updateFlashcardView() {
-      if (currentFlashcards.length === 0) return;
-      const card = currentFlashcards[currentCardIndex];
-
-      document.getElementById('fc-unit').innerText = `Unit ${currentUnitId}`;
-      document.getElementById('fc-front').innerText = card.front;
-      document.getElementById('fc-back').innerText = card.back;
-      document.getElementById('fc-context').innerText = card.context;
-      document.getElementById('fc-example').innerText = `"${card.example}"`;
-      document.getElementById('fc-hint').innerText = `Hint: ${card.context}`;
-      document.getElementById('card-counter').innerText = `${currentCardIndex + 1} / ${currentFlashcards.length}`;
-
-      const cardEl = document.querySelector('.perspective-1000');
-      if (cardEl.classList.contains('card-flipped')) cardEl.classList.remove('card-flipped');
-    }
-
-    function nextCard() {
-      if (currentCardIndex < currentFlashcards.length - 1) {
-        currentCardIndex++;
-        updateFlashcardView();
-      } else {
-        currentCardIndex = 0;
-        updateFlashcardView();
-        showToast('Returned to start', 'info');
-      }
-    }
-
-    function prevCard() {
-      if (currentCardIndex > 0) {
-        currentCardIndex--;
-        updateFlashcardView();
-      }
-    }
-
-    function toggleFlip(el) { el.classList.toggle('card-flipped'); }
-
-    function toggleAutoplay() {
-      autoplay = !autoplay;
-      const knob = document.getElementById('autoplayKnob');
-      const wrap = document.getElementById('autoplayToggle');
-      if (autoplay) {
-        knob.style.left = '20px';
-        wrap.classList.remove('bg-slate-200');
-        wrap.classList.add('bg-indigo-600');
-        startAutoplay();
-        showToast('Autoplay enabled', 'info');
-      } else {
-        knob.style.left = '0px';
-        wrap.classList.add('bg-slate-200');
-        wrap.classList.remove('bg-indigo-600');
-        stopAutoplay();
-        showToast('Autoplay disabled', 'info');
-      }
-    }
-
-    function startAutoplay() {
-      stopAutoplay();
-      autoplayTimer = setInterval(() => {
-        if (!document.getElementById('content-flashcard').classList.contains('hidden')) {
-          nextCard();
-        }
-      }, 3500);
-    }
-
-    function stopAutoplay() {
-      if (autoplayTimer) clearInterval(autoplayTimer);
-      autoplayTimer = null;
-    }
-
-    function speak(text) {
-      const msg = new SpeechSynthesisUtterance();
-      msg.text = text;
-      msg.lang = 'en-US';
-      window.speechSynthesis.speak(msg);
-    }
-
-    // ====== Tabs ======
-    function switchTab(tabName) {
-      ['learn', 'flashcard', 'quiz'].forEach(t => {
-        document.getElementById('content-' + t).classList.add('hidden');
-        const btn = document.getElementById('tab-' + t);
-        btn.classList.remove('text-indigo-600', 'border-indigo-600');
-        btn.classList.add('text-slate-500', 'border-transparent');
-      });
-      document.getElementById('content-' + tabName).classList.remove('hidden');
-      const activeBtn = document.getElementById('tab-' + tabName);
-      activeBtn.classList.remove('text-slate-500', 'border-transparent');
-      activeBtn.classList.add('text-indigo-600', 'border-indigo-600');
-
-      if (tabName !== 'flashcard') stopAutoplay();
-    }
-
-    // ====== API Key ======
-    function openApiModal() { document.getElementById('apiModal').classList.add('active'); }
-    function closeApiModal() { document.getElementById('apiModal').classList.remove('active'); }
-
-    function saveApiKey() {
-      const key = document.getElementById('apiKeyInput').value.trim();
-      if (key.startsWith('sk-')) {
-        localStorage.setItem('openai_key', key);
-        closeApiModal();
-        checkApiStatus();
-        showToast('API Key connected successfully!');
-      } else {
-        showToast('Invalid API Key format', 'error');
-      }
-    }
-
-    function checkApiStatus() {
-      const key = localStorage.getItem('openai_key');
-      const dot = document.getElementById('apiStatusDot');
-      const txt = document.getElementById('apiStatusText');
-
-      if (key && key.startsWith('sk-')) {
-        dot.classList.remove('bg-red-500');
-        dot.classList.add('bg-green-500');
-        txt.innerText = 'AI Connected';
-        return true;
-      } else {
-        dot.classList.remove('bg-green-500');
-        dot.classList.add('bg-red-500');
-        txt.innerText = 'AI Disconnected';
-        return false;
-      }
-    }
-
-    // ====== Toast ======
-    function showToast(msg, type = 'success') {
-      const t = document.getElementById('toast');
-      const title = document.getElementById('toast-title');
-      const text = document.getElementById('toast-msg');
-      const icon = document.getElementById('toast-icon');
-      const bubble = document.getElementById('toast-bubble');
-
-      title.innerText = (type === 'error') ? 'Error' : 'Notification';
-      text.innerText = msg;
-
-      if (type === 'error') {
-        icon.className = 'fas fa-exclamation text-red-400';
-        bubble.className = 'w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center';
-      } else if (type === 'info') {
-        icon.className = 'fas fa-info text-blue-300';
-        bubble.className = 'w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center';
-      } else {
-        icon.className = 'fas fa-check text-green-400';
-        bubble.className = 'w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center';
-      }
-
-      t.classList.remove('translate-y-32');
-      setTimeout(() => t.classList.add('translate-y-32'), 3000);
-    }
-
-    // ====== AI Analysis (Visible output) ======
-    function askAI(prompt) {
-      // Always show a visible result. If API works -> show API, else -> fallback local.
-      const unit = unitDatabase[currentUnitId];
-      document.getElementById('ai-output').classList.remove('hidden');
-      document.getElementById('ai-output-body').innerHTML = `
-        <div class="text-xs text-slate-500 mb-3">Prompt: <span class="font-semibold">${escapeHtml(prompt)}</span></div>
-        <div class="text-sm text-slate-700">Generating analysis...</div>
-      `;
-
-      if (!checkApiStatus()) {
-        openApiModal();
-        document.getElementById('ai-output-body').innerHTML = renderLocalAnalysis(unit.items);
-        return;
-      }
-
-      // Try OpenAI API, if fails -> fallback.
-      callOpenAIForAnalysis(unit).then(html => {
-        document.getElementById('ai-output-body').innerHTML = html;
-      }).catch(err => {
-        console.warn(err);
-        document.getElementById('ai-output-body').innerHTML = renderLocalAnalysis(unit.items) +
-          `<div class="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <b>Fallback:</b> Could not call OpenAI API from browser (often CORS). Local analysis shown instead.
-          </div>`;
-        showToast('AI API failed → used local analysis', 'info');
-      });
-    }
-
-    function renderLocalAnalysis(items) {
-      const types = {};
-      items.forEach(x => { types[x.type] = (types[x.type] || 0) + 1; });
-      const topTypes = Object.entries(types).sort((a,b)=>b[1]-a[1]).slice(0,4);
-
-      const examples = items.slice(0, 6).map(x => `<li><span class="font-semibold text-indigo-700">${escapeHtml(x.word)}</span> — <span class="text-slate-600">${escapeHtml(x.def)}</span></li>`).join("");
-
-      return `
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
-            <div class="text-xs font-bold text-slate-500 uppercase mb-2">Patterns</div>
-            <ul class="text-sm text-slate-700 space-y-1">
-              ${topTypes.map(t => `<li><span class="font-semibold">${escapeHtml(t[0])}</span>: ${t[1]} items</li>`).join("")}
-            </ul>
-          </div>
-          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
-            <div class="text-xs font-bold text-slate-500 uppercase mb-2">Study tips</div>
-            <ul class="text-sm text-slate-700 space-y-1 list-disc pl-5">
-              <li>Say the collocation aloud + 1 personal sentence.</li>
-              <li>Notice register (formal/informal) and grammar pattern.</li>
-              <li>Review with flashcards using spaced repetition.</li>
-              <li>Write a mini-paragraph using 5 collocations.</li>
-            </ul>
-          </div>
-        </div>
-        <div class="mt-4">
-          <div class="text-xs font-bold text-slate-500 uppercase mb-2">Sample items</div>
-          <ul class="text-sm text-slate-700 space-y-1 list-disc pl-5">
-            ${examples}
-          </ul>
-        </div>
-      `;
-    }
-
-    // ====== Quiz (FIX: now renders) ======
-    function generateAIQuiz() {
-      const items = unitDatabase[currentUnitId].items;
-      const quizEl = document.getElementById('quiz-output');
-      quizEl.classList.remove('hidden');
-      quizEl.innerHTML = `<div class="text-sm text-slate-600">Generating quiz...</div>`;
-      lastQuizQuestions = [];
-
-      // Prefer API, fallback local
-      if (!checkApiStatus()) {
-        openApiModal();
-        const q = generateLocalQuiz(items);
-        lastQuizModel = "local";
-        lastQuizQuestions = q;
-        quizEl.innerHTML = renderQuizHTML(q);
-        showToast('Quiz generated (local)', 'success');
-        quizEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        return;
-      }
-
-      callOpenAIForQuiz(items).then(q => {
-        lastQuizModel = "openai";
-        lastQuizQuestions = q;
-        quizEl.innerHTML = renderQuizHTML(q);
-        showToast('Quiz generated (AI)', 'success');
-        quizEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }).catch(err => {
-        console.warn(err);
-        const q = generateLocalQuiz(items);
-        lastQuizModel = "local";
-        lastQuizQuestions = q;
-        quizEl.innerHTML = renderQuizHTML(q) + `
-          <div class="mt-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <b>Fallback:</b> Could not call OpenAI API from browser (often CORS). Local quiz shown instead.
-          </div>
-        `;
-        showToast('AI API failed → used local quiz', 'info');
-        quizEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    }
-
-    function toggleQuizAnswers() {
-      quizAnswersVisible = !quizAnswersVisible;
-      const quizEl = document.getElementById('quiz-output');
-      if (quizEl.classList.contains('hidden')) {
-        showToast('Create a quiz first', 'info');
-        return;
-      }
-      quizEl.querySelectorAll('[data-answer]').forEach(el => {
-        el.classList.toggle('hidden', !quizAnswersVisible);
-      });
-      showToast(quizAnswersVisible ? 'Answers shown' : 'Answers hidden', 'info');
-    }
-
-    function generateLocalQuiz(items) {
-      // Build 10 questions from collocations (gap-fill + MCQ + matching)
-      const shuffled = [...items].sort(() => Math.random() - 0.5);
-      const pick = shuffled.slice(0, Math.min(12, shuffled.length));
-
-      const questions = [];
-      const allWords = items.map(x => x.word);
-
-      // 1-6: Gap-fill (hide a key word)
-      for (let i = 0; i < Math.min(6, pick.length); i++) {
-        const phrase = pick[i].word;
-        const parts = phrase.split(' ');
-        const hideIndex = Math.min(parts.length - 1, Math.max(0, Math.floor(Math.random() * parts.length)));
-        const answer = parts[hideIndex];
-        parts[hideIndex] = "_____";
-        questions.push({
-          type: "Gap-fill",
-          prompt: `Complete the collocation: <span class="font-semibold text-indigo-700">${escapeHtml(parts.join(' '))}</span>`,
-          choices: null,
-          answer: phrase,
-          explain: pick[i].def
-        });
-      }
-
-      // 7-9: Multiple choice meaning
-      for (let i = 0; i < 3; i++) {
-        const item = pick[(i + 6) % pick.length];
-        const distractors = [...items].filter(x => x.word !== item.word).sort(() => Math.random() - 0.5).slice(0, 3);
-        const opts = [item.def, ...distractors.map(d => d.def)].sort(() => Math.random() - 0.5);
-        questions.push({
-          type: "MCQ (meaning)",
-          prompt: `What does <span class="font-semibold text-indigo-700">${escapeHtml(item.word)}</span> mean?`,
-          choices: opts,
-          answer: item.def,
-          explain: item.example
-        });
-      }
-
-      // 10: Matching (3 pairs)
-      const m = pick.slice(0, 3);
-      const left = m.map(x => x.word);
-      const right = m.map(x => x.def).sort(() => Math.random() - 0.5);
-      questions.push({
-        type: "Matching (3 pairs)",
-        prompt: `Match the collocations (A–C) with the meanings (1–3).`,
-        matchLeft: left,
-        matchRight: right,
-        answerPairs: m.map(x => ({ word: x.word, def: x.def }))
-      });
-
-      return questions;
-    }
-
-    function renderQuizHTML(questions) {
-      const meta = `
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <div class="text-lg font-bold text-slate-800">Unit ${currentUnitId} Quiz</div>
-            <div class="text-xs text-slate-500">Source: ${escapeHtml(lastQuizModel.toUpperCase())} • Total: ${questions.length} questions</div>
-          </div>
-          <div class="text-xs font-bold px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-600">
-            Answers: <span class="text-indigo-600">${quizAnswersVisible ? "ON" : "OFF"}</span>
-          </div>
-        </div>
-      `;
-
-      const blocks = questions.map((q, idx) => {
-        if (q.type.startsWith("Matching")) {
-          const left = q.matchLeft.map((w, i) => `<div class="p-3 rounded-lg border border-slate-200 bg-white"><b>${String.fromCharCode(65+i)}.</b> ${escapeHtml(w)}</div>`).join("");
-          const right = q.matchRight.map((d, i) => `<div class="p-3 rounded-lg border border-slate-200 bg-white"><b>${i+1}.</b> ${escapeHtml(d)}</div>`).join("");
-          const ans = q.answerPairs.map(p => `<li><span class="font-semibold text-indigo-700">${escapeHtml(p.word)}</span> → ${escapeHtml(p.def)}</li>`).join("");
-          return `
-            <div class="p-5 rounded-xl border border-slate-200 bg-slate-50/50">
-              <div class="flex items-center justify-between mb-2">
-                <div class="text-xs font-bold text-slate-500 uppercase">${escapeHtml(q.type)}</div>
-                <div class="text-xs text-slate-400 font-mono">#${idx+1}</div>
-              </div>
-              <div class="text-sm text-slate-700 mb-4">${q.prompt}</div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-2">${left}</div>
-                <div class="space-y-2">${right}</div>
-              </div>
-              <div data-answer class="mt-4 text-sm text-slate-700 bg-white border border-slate-200 rounded-lg p-4 ${quizAnswersVisible ? '' : 'hidden'}">
-                <div class="text-xs font-bold text-slate-500 uppercase mb-2">Answer key</div>
-                <ul class="list-disc pl-5 space-y-1">${ans}</ul>
-              </div>
-            </div>
-          `;
-        }
-
-        const choicesHTML = (q.choices && q.choices.length)
-          ? `<div class="mt-3 grid grid-cols-1 gap-2">
-               ${q.choices.map((c, i) => `
-                <label class="flex items-start gap-2 p-3 rounded-lg border border-slate-200 bg-white hover:border-indigo-300 cursor-pointer">
-                  <input type="radio" name="q${idx}" class="mt-1" />
-                  <span class="text-sm text-slate-700"><b>${String.fromCharCode(65+i)}.</b> ${escapeHtml(c)}</span>
-                </label>
-               `).join("")}
-             </div>`
-          : "";
-
-        return `
-          <div class="p-5 rounded-xl border border-slate-200 bg-slate-50/50">
-            <div class="flex items-center justify-between mb-2">
-              <div class="text-xs font-bold text-slate-500 uppercase">${escapeHtml(q.type)}</div>
-              <div class="text-xs text-slate-400 font-mono">#${idx+1}</div>
-            </div>
-            <div class="text-sm text-slate-700">${q.prompt}</div>
-            ${choicesHTML}
-            <div data-answer class="mt-4 text-sm text-slate-700 bg-white border border-slate-200 rounded-lg p-4 ${quizAnswersVisible ? '' : 'hidden'}">
-              <div class="text-xs font-bold text-slate-500 uppercase mb-1">Answer</div>
-              <div class="font-semibold text-indigo-700">${escapeHtml(q.answer)}</div>
-              ${q.explain ? `<div class="mt-2 text-xs text-slate-500">${escapeHtml(q.explain)}</div>` : ''}
-            </div>
-          </div>
-        `;
-      }).join("");
-
-      return meta + `<div class="space-y-4">${blocks}</div>`;
-    }
-
-    // ====== OpenAI calls (best-effort; fallback if blocked) ======
-    async function callOpenAIForAnalysis(unit) {
-      const key = localStorage.getItem('openai_key');
-      const prompt = `
-You are an IELTS/Advanced English collocations coach.
-Analyze this unit's collocations and produce:
-- 4 bullet study tips
-- 4 common patterns (verb+noun, adj+noun, etc.)
-- 6 short example sentences using different collocations from the list.
-Keep it concise and helpful.
-
-Unit title: ${unitTitles[currentUnitId]}
-Collocations:
-${unit.items.map(x => `- ${x.word} :: ${x.def}`).join("\n")}
-`;
-
-      // NOTE: This may fail due to CORS in browser environment.
-      const res = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${key}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          input: prompt
-        })
-      });
-
-      if (!res.ok) throw new Error("OpenAI API error: " + res.status);
-      const data = await res.json();
-      const text = (data.output_text || "").trim();
-      return `<div class="prose prose-sm max-w-none text-slate-700 whitespace-pre-wrap">${escapeHtml(text)}</div>`;
-    }
-
-    async function callOpenAIForQuiz(items) {
-      const key = localStorage.getItem('openai_key');
-      const prompt = `
-Create a quiz from the collocations list.
-Return STRICT JSON only (no markdown):
-{
-  "questions":[
-    { "type":"Gap-fill", "prompt":"...", "answer":"...", "explain":"..." },
-    { "type":"MCQ (meaning)", "prompt":"...", "choices":["A","B","C","D"], "answer":"...", "explain":"..." },
-    { "type":"Matching (3 pairs)", "prompt":"...", "matchLeft":["...","...","..."], "matchRight":["...","...","..."], "answerPairs":[{"word":"...","def":"..."}] }
-  ]
+<script>
+/* =========================
+   Storage helpers
+========================= */
+const LS_KEY = "ielts_book_study_v1";
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; }
+  catch { return {}; }
 }
-Make 10 questions total: 6 gap-fill, 3 MCQ, 1 matching.
-Use only collocations/meanings from the list.
+function saveState(partial) {
+  const cur = loadState();
+  const next = { ...cur, ...partial };
+  localStorage.setItem(LS_KEY, JSON.stringify(next));
+  return next;
+}
+function resetState() {
+  localStorage.removeItem(LS_KEY);
+  location.reload();
+}
 
-Collocations:
-${items.map(x => `- ${x.word} :: ${x.def}`).join("\n")}
-`;
+/* =========================
+   Default TOC (based on the provided PDF excerpt)
+   - You can edit these later in UI.
+   - pdfPage is 1-based.
+========================= */
+const DEFAULT_UNITS = [
+  // Main Units (from Contents/Map of the book pages)
+  { id:"u1",  title:"Unit 1 — Growing up", topics:"Relationships, families and early learning", pdfPage:11 },
+  { id:"u2",  title:"Unit 2 — Mental and physical development", topics:"The body, the mind", pdfPage:15 },
+  { id:"u3",  title:"Unit 3 — Keeping fit", topics:"Diet, health and exercise", pdfPage:19 },
 
-      const res = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${key}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          input: prompt
-        })
+  // The full book has more units (4–20) + language building + writing units.
+  // If your PDF includes them, just map their starting pages in TOC editor.
+  { id:"u4",  title:"Unit 4 — Lifestyles", topics:"Life, leisure", pdfPage:0 },
+  { id:"u5",  title:"Unit 5 — Student life", topics:"Study, education, research", pdfPage:0 },
+  { id:"u6",  title:"Unit 6 — Effective communication", topics:"Language, linguistics", pdfPage:0 },
+  { id:"u7",  title:"Unit 7 — On the move", topics:"Tourism, travel", pdfPage:0 },
+  { id:"u8",  title:"Unit 8 — Through the ages", topics:"Time, history", pdfPage:0 },
+  { id:"u9",  title:"Unit 9 — The natural world", topics:"Flora and fauna, agriculture", pdfPage:0 },
+  { id:"u10", title:"Unit 10 — Reaching for the skies", topics:"Space, the planets", pdfPage:0 },
+  { id:"u11", title:"Unit 11 — Design and innovation", topics:"Building, engineering", pdfPage:0 },
+  { id:"u12", title:"Unit 12 — Information technology", topics:"Telecommunications, computers and technology", pdfPage:0 },
+  { id:"u13", title:"Unit 13 — The modern world", topics:"Globalisation, changing attitudes and trends", pdfPage:0 },
+  { id:"u14", title:"Unit 14 — Urbanisation", topics:"Problems and solutions, big city life", pdfPage:0 },
+  { id:"u15", title:"Unit 15 — The green revolution", topics:"The environment, climate change and pollution", pdfPage:0 },
+  { id:"u16", title:"Unit 16 — The energy crisis", topics:"Natural resources, alternative fuels", pdfPage:0 },
+  { id:"u17", title:"Unit 17 — Talking business", topics:"Employment, management and marketing", pdfPage:0 },
+  { id:"u18", title:"Unit 18 — The law", topics:"Crime, punishment", pdfPage:0 },
+  { id:"u19", title:"Unit 19 — The media", topics:"The news, fame", pdfPage:0 },
+  { id:"u20", title:"Unit 20 — The arts", topics:"Art appreciation, the performing arts", pdfPage:0 },
+
+  // Reference / writing practice (map if your PDF includes)
+  { id:"u21", title:"Unit 21 — Language building 1", topics:"Using a dictionary, word families", pdfPage:0 },
+  { id:"u22", title:"Unit 22 — Language building 2", topics:"Learning vocabulary, collocation", pdfPage:0 },
+  { id:"u23", title:"Unit 23 — Academic Writing Task 1", topics:"Data, graphs and tables, diagrams and processes", pdfPage:0 },
+  { id:"u24", title:"Unit 24 — Academic Writing Task 2", topics:"Linking words, opinion words, register", pdfPage:0 },
+  { id:"u25", title:"Unit 25 — General Training Writing", topics:"Vocabulary for Writing Tasks 1 and 2", pdfPage:0 },
+];
+
+function unitsFromState() {
+  const st = loadState();
+  return st.units || DEFAULT_UNITS;
+}
+
+/* =========================
+   PDF.js viewer
+========================= */
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.6.82/pdf.worker.min.js";
+
+let pdfDoc = null;
+let currentPage = 1;
+let scale = 1.2;
+
+const canvas = document.getElementById("pdfCanvas");
+const ctx = canvas.getContext("2d");
+
+async function renderPage(pageNum) {
+  if (!pdfDoc) return;
+
+  const page = await pdfDoc.getPage(pageNum);
+  const viewport = page.getViewport({ scale });
+
+  canvas.width = Math.floor(viewport.width);
+  canvas.height = Math.floor(viewport.height);
+
+  const renderContext = { canvasContext: ctx, viewport };
+  await page.render(renderContext).promise;
+
+  currentPage = pageNum;
+  document.getElementById("pageNum").textContent = currentPage;
+  document.getElementById("pageCount").textContent = pdfDoc.numPages;
+}
+
+async function openPdfFromArrayBuffer(buf) {
+  pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
+  document.getElementById("pdfHint").classList.add("hidden");
+  document.getElementById("pdfWrap").classList.remove("hidden");
+  currentPage = 1;
+  await renderPage(currentPage);
+}
+
+function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+/* =========================
+   UI: Unit list + progress
+========================= */
+let activeUnitId = null;
+
+function getProgress() {
+  const st = loadState();
+  const done = st.doneUnits || {};
+  const units = unitsFromState().filter(u => u.id.startsWith("u") && u.id !== "u0");
+  const total = units.length;
+  const completed = units.reduce((acc,u)=>acc + (done[u.id] ? 1 : 0), 0);
+  return { total, completed };
+}
+
+function updateProgressUI() {
+  const { total, completed } = getProgress();
+  document.getElementById("progressText").textContent = `${completed}/${total} đã hoàn thành`;
+}
+
+function setActiveUnit(unit) {
+  activeUnitId = unit.id;
+  document.getElementById("activeUnitTitle").textContent = unit.title;
+  document.getElementById("activeUnitTopics").textContent = unit.topics || "—";
+  saveState({ activeUnitId });
+
+  // set default prompt hint for writing
+  const p = document.getElementById("writingPrompt");
+  if (!p.value.trim()) {
+    p.placeholder = `Dán đề IELTS vào đây... (Gợi ý: dùng vocab theo chủ đề: ${unit.topics || unit.title})`;
+  }
+}
+
+function buildUnitList() {
+  const st = loadState();
+  const units = unitsFromState();
+  const done = st.doneUnits || {};
+  const q = (document.getElementById("unitSearch").value || "").toLowerCase().trim();
+
+  const list = document.getElementById("unitList");
+  list.innerHTML = "";
+
+  units
+    .filter(u => {
+      if (!q) return true;
+      return (u.title + " " + (u.topics||"")).toLowerCase().includes(q);
+    })
+    .forEach(u => {
+      const isDone = !!done[u.id];
+      const isActive = (st.activeUnitId || activeUnitId) === u.id;
+
+      const card = document.createElement("div");
+      card.className = `p-3 rounded-xl border ${isActive ? "bg-slate-900 text-white border-slate-900" : "bg-white hover:bg-slate-50"} transition`;
+
+      const top = document.createElement("div");
+      top.className = "flex items-start gap-2";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = isDone;
+      cb.className = "mt-1";
+      cb.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const st2 = loadState();
+        const d = st2.doneUnits || {};
+        d[u.id] = cb.checked;
+        saveState({ doneUnits: d });
+        updateProgressUI();
       });
 
-      if (!res.ok) throw new Error("OpenAI API error: " + res.status);
-      const data = await res.json();
-      const text = (data.output_text || "").trim();
-      const obj = JSON.parse(text);
-      return obj.questions || [];
-    }
+      const title = document.createElement("div");
+      title.className = "flex-1";
+      title.innerHTML = `
+        <div class="text-sm font-semibold leading-snug">${u.title}</div>
+        <div class="text-xs ${isActive ? "text-white/80" : "text-slate-500"} leading-snug">${u.topics || ""}</div>
+        <div class="text-[11px] ${isActive ? "text-white/70" : "text-slate-400"} mt-1">
+          ${u.pdfPage ? `PDF page: ${u.pdfPage}` : "Chưa map trang (bấm “Sửa map trang”)"} 
+        </div>
+      `;
 
-    // ====== Helpers ======
-    function escapeHtml(str) {
-      return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-    function jsString(str) {
-      return String(str).replaceAll("\\", "\\\\").replaceAll("'", "\\'");
-    }
+      top.appendChild(cb);
+      top.appendChild(title);
+      card.appendChild(top);
 
-    // ====== Init ======
-    document.addEventListener('DOMContentLoaded', () => {
-      initSidebarAndDashboard();
-      checkApiStatus();
-      loadDashboard();
-      const k = localStorage.getItem('openai_key');
-      if (k) document.getElementById('apiKeyInput').value = k;
+      card.addEventListener("click", async () => {
+        setActiveUnit(u);
+        buildUnitList();
+
+        // Jump to mapped page if possible
+        if (pdfDoc && u.pdfPage && u.pdfPage > 0) {
+          const target = clamp(u.pdfPage, 1, pdfDoc.numPages);
+          await renderPage(target);
+        }
+      });
+
+      list.appendChild(card);
     });
-  </script>
-</body>
-</html>
+
+  updateProgressUI();
+}
+
+/* =========================
+   TOC editor
+========================= */
+function tocToText(units) {
+  return units.map(u => `${u.id}|${u.pdfPage || 0}`).join("\n");
+}
+function applyTocText(txt) {
+  const units = unitsFromState().map(u => ({...u}));
+  const lines = txt.split("\n").map(s => s.trim()).filter(Boolean);
+  const map = {};
+  for (const line of lines) {
+    const [id, pageStr] = line.split("|").map(s => (s||"").trim());
+    if (!id) continue;
+    const p = parseInt(pageStr || "0", 10);
+    map[id] = Number.isFinite(p) ? p : 0;
+  }
+  for (const u of units) {
+    if (map.hasOwnProperty(u.id)) u.pdfPage = map[u.id];
+  }
+  saveState({ units });
+  buildUnitList();
+}
+
+/* =========================
+   Writing corrector via OpenAI Responses API
+========================= */
+let apiMode = "client"; // "client" | "proxy"
+function setMode(mode) {
+  apiMode = mode;
+  saveState({ apiMode });
+
+  const hint = document.getElementById("modeHint");
+  if (mode === "client") {
+    hint.textContent = "Client mode: trình duyệt gọi thẳng OpenAI. Nhanh nhưng dễ lộ key (không khuyến nghị).";
+  } else {
+    hint.textContent = "Proxy mode: trình duyệt gọi tới server của bạn (Vercel/Cloudflare/Node) để che key. Khuyến nghị.";
+  }
+}
+
+function buildWritingPrompt() {
+  const unit = unitsFromState().find(u => u.id === (loadState().activeUnitId || activeUnitId)) || null;
+  const unitHint = unit ? `Ưu tiên dùng vocabulary/collocations theo chủ đề: ${unit.topics || unit.title}.` : "";
+
+  const taskType = document.getElementById("taskType").value;
+  const userPrompt = document.getElementById("writingPrompt").value.trim();
+  const draft = document.getElementById("writingDraft").value.trim();
+
+  return `
+Bạn là giám khảo IELTS Writing và giáo viên sửa bài.
+Nhiệm vụ: chấm và sửa bài viết của tôi theo tiêu chí IELTS (Task Achievement/Response, Coherence & Cohesion, Lexical Resource, Grammar Range & Accuracy).
+${unitHint}
+
+Hãy trả lời theo cấu trúc:
+1) Band estimate (0.5 step) + 4 tiêu chí (gạch đầu dòng ngắn)
+2) Những lỗi chính (chia theo: Task, Coherence, Vocabulary, Grammar)
+3) Sửa lỗi trực tiếp: liệt kê 10–20 lỗi tiêu biểu dạng "Sai → Đúng + giải thích ngắn"
+4) Viết lại bài tốt hơn (giữ ý của tôi, tự nhiên, học thuật vừa phải)
+5) 10 từ/cụm từ/collocation nâng band phù hợp chủ đề + ví dụ câu
+6) 3 gợi ý để tôi tự cải thiện lần sau
+
+Loại bài: ${taskType}
+
+Đề bài:
+${userPrompt || "(Chưa cung cấp đề)"}
+
+Bài tôi viết:
+${draft || "(Chưa có bài viết)"}
+`.trim();
+}
+
+async function callOpenAI(message) {
+  const resultBox = document.getElementById("resultBox");
+  resultBox.textContent = "⏳ Đang chấm/sửa...";
+
+  const model = "gpt-4.1-mini"; // fast + good for instruction following :contentReference[oaicite:3]{index=3}
+
+  if (apiMode === "proxy") {
+    const url = document.getElementById("proxyUrl").value.trim();
+    if (!url) throw new Error("Bạn đang ở Proxy mode nhưng chưa nhập Proxy URL.");
+
+    // Proxy expected to accept: { model, input }
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        input: [{ role: "user", content: [{ type:"input_text", text: message }] }]
+      })
+    });
+    if (!resp.ok) {
+      const t = await resp.text();
+      throw new Error("Proxy error: " + t);
+    }
+    const data = await resp.json();
+    // Proxy should return OpenAI response JSON (or {output_text})
+    return data.output_text || (data.output && data.output[0] && data.output[0].content && data.output[0].content[0] && data.output[0].content[0].text) || JSON.stringify(data, null, 2);
+  }
+
+  // Client mode (direct)
+  const apiKey = document.getElementById("apiKey").value.trim();
+  if (!apiKey) throw new Error("Chưa nhập API key.");
+
+  // Responses API: POST /v1/responses :contentReference[oaicite:4]{index=4}
+  const resp = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + apiKey
+    },
+    body: JSON.stringify({
+      model,
+      input: [{
+        role: "user",
+        content: [{ type: "input_text", text: message }]
+      }]
+    })
+  });
+
+  const data = await resp.json();
+  if (!resp.ok) {
+    throw new Error((data && data.error && data.error.message) ? data.error.message : "API error");
+  }
+
+  // Many SDKs provide output_text; raw response contains output items :contentReference[oaicite:5]{index=5}
+  return data.output_text || extractOutputText(data) || JSON.stringify(data, null, 2);
+}
+
+function extractOutputText(data) {
+  try {
+    if (!data || !Array.isArray(data.output)) return "";
+    let out = "";
+    for (const item of data.output) {
+      if (item.type === "message" && Array.isArray(item.content)) {
+        for (const c of item.content) {
+          if (c.type === "output_text" && c.text) out += c.text;
+          if (c.type === "text" && c.text) out += c.text;
+        }
+      }
+    }
+    return out.trim();
+  } catch {
+    return "";
+  }
+}
+
+/* =========================
+   Events
+========================= */
+document.getElementById("pdfFile").addEventListener("change", async (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+
+  const buf = await f.arrayBuffer();
+  await openPdfFromArrayBuffer(buf);
+  saveState({ lastPdfName: f.name });
+
+  // if user previously had active unit, jump
+  const st = loadState();
+  const units = unitsFromState();
+  if (st.activeUnitId) {
+    const u = units.find(x => x.id === st.activeUnitId);
+    if (u) {
+      setActiveUnit(u);
+      buildUnitList();
+      if (u.pdfPage && u.pdfPage > 0) await renderPage(clamp(u.pdfPage, 1, pdfDoc.numPages));
+    }
+  }
+});
+
+document.getElementById("btnPrev").addEventListener("click", async () => {
+  if (!pdfDoc) return;
+  await renderPage(clamp(currentPage - 1, 1, pdfDoc.numPages));
+});
+document.getElementById("btnNext").addEventListener("click", async () => {
+  if (!pdfDoc) return;
+  await renderPage(clamp(currentPage + 1, 1, pdfDoc.numPages));
+});
+document.getElementById("btnZoomIn").addEventListener("click", async () => {
+  if (!pdfDoc) return;
+  scale = Math.min(scale + 0.15, 3.0);
+  await renderPage(currentPage);
+});
+document.getElementById("btnZoomOut").addEventListener("click", async () => {
+  if (!pdfDoc) return;
+  scale = Math.max(scale - 0.15, 0.7);
+  await renderPage(currentPage);
+});
+
+document.getElementById("btnSave").addEventListener("click", () => {
+  saveState({
+    quickNotes: document.getElementById("quickNotes").value,
+    apiKey: document.getElementById("apiKey").value,
+    proxyUrl: document.getElementById("proxyUrl").value,
+    taskType: document.getElementById("taskType").value,
+    writingPrompt: document.getElementById("writingPrompt").value,
+    writingDraft: document.getElementById("writingDraft").value,
+  });
+  alert("Đã lưu vào trình duyệt.");
+});
+
+document.getElementById("btnReset").addEventListener("click", () => {
+  if (confirm("Reset toàn bộ dữ liệu đã lưu trên trình duyệt?")) resetState();
+});
+
+document.getElementById("unitSearch").addEventListener("input", buildUnitList);
+
+document.getElementById("btnTOCDefault").addEventListener("click", () => {
+  saveState({ units: DEFAULT_UNITS });
+  buildUnitList();
+  alert("Đã áp dụng mục lục mẫu. Nếu PDF của bạn khác trang, bấm “Sửa map trang”.");
+});
+
+document.getElementById("btnTOCEdit").addEventListener("click", () => {
+  const box = document.getElementById("tocEditBox");
+  box.classList.toggle("hidden");
+  document.getElementById("tocEditor").value = tocToText(unitsFromState());
+});
+
+document.getElementById("btnApplyTOC").addEventListener("click", () => {
+  applyTocText(document.getElementById("tocEditor").value);
+  document.getElementById("tocEditBox").classList.add("hidden");
+});
+
+document.getElementById("btnCancelTOC").addEventListener("click", () => {
+  document.getElementById("tocEditBox").classList.add("hidden");
+});
+
+document.getElementById("modeClient").addEventListener("click", () => setMode("client"));
+document.getElementById("modeProxy").addEventListener("click", () => setMode("proxy"));
+
+document.getElementById("btnClearWriting").addEventListener("click", () => {
+  document.getElementById("writingPrompt").value = "";
+  document.getElementById("writingDraft").value = "";
+  document.getElementById("resultBox").textContent = "";
+  saveState({ writingPrompt:"", writingDraft:"" });
+});
+
+document.getElementById("btnCheck").addEventListener("click", async () => {
+  try {
+    const msg = buildWritingPrompt();
+    const output = await callOpenAI(msg);
+    document.getElementById("resultBox").textContent = output || "(Không có output)";
+  } catch (err) {
+    document.getElementById("resultBox").textContent = "❌ " + (err?.message || String(err));
+  }
+});
+
+/* =========================
+   Restore state on load
+========================= */
+(function init() {
+  const st = loadState();
+
+  // restore units
